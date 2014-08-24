@@ -8,6 +8,10 @@ class DummyClass implements Comparable<DummyClass>{
     int dummyInt;
     float dummyFloat;
     
+    public String toString(){
+        return ("(" + String.valueOf(dummyInt) + "," +  String.valueOf(dummyFloat) + ")");
+    }
+    
     public DummyClass(int dummyInt, float dummyFloat){
         this.dummyInt = dummyInt;
         this.dummyFloat = dummyFloat;
