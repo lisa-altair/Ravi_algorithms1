@@ -1,5 +1,5 @@
 /*
- * A dummy class used to test Selection Sort for a
+ * A dummy class used to test Sort for a
  * user defined class.
  * 
  * @author: Ravi Agrawal
@@ -12,6 +12,7 @@ class DummyClass implements Comparable<DummyClass>{
         return ("(" + String.valueOf(dummyInt) + "," +  String.valueOf(dummyFloat) + ")");
     }
     
+	// Parameterized constructor
     public DummyClass(int dummyInt, float dummyFloat){
         this.dummyInt = dummyInt;
         this.dummyFloat = dummyFloat;
