@@ -58,13 +58,17 @@ public class SortingClient<T extends Comparable<T>> implements Runnable{
         long startTime, endTime;
 		double execTime;
 		
-		startTime = System.nanoTime();
 		switch (sortToRun) {
 			case 'I':
-				InsertionSort<T> insertObj = new InsertionSort<T>(this.lst);
-				endTime = System.nanoTime();
+				// Take intrinsic lock on 'System' class
+				// to prevent thread interference in timing measurements.
+				synchronized(System.class){			
+					startTime = System.nanoTime();
+					InsertionSort<T> insertObj = new InsertionSort<T>(this.lst);
+					endTime = System.nanoTime();
+				}
 				execTime = (endTime - startTime) / (10e9);
-				
+
 				// Check that the sort was performed correctly
 				if (this.checkResult(this.lst)){
 					System.out.println("Time taken by Insertion Sort: " + execTime + " secs");
@@ -75,15 +79,38 @@ public class SortingClient<T extends Comparable<T>> implements Runnable{
 				break;
 			
 			case 'S':
-				SelectionSort<T> selObj = new SelectionSort<T>(this.lst);
-				endTime = System.nanoTime();
+				// Take intrinsic lock on 'System' class
+				// to prevent thread interference in timing measurements.
+				synchronized(System.class){
+					startTime = System.nanoTime();
+					SelectionSort<T> selObj = new SelectionSort<T>(this.lst);
+					endTime = System.nanoTime();
+				}
 				execTime = (endTime - startTime) / (10e9);
-				
+
 				// Check that the sort was performed correctly
 				if (this.checkResult(this.lst)){
 					System.out.println("Time taken by Selection Sort: " + execTime + " secs");
 				} else {
-					System.err.println("The list did not sort in natural order.");
+					System.err.println("The list did not sort correctly.");
+					System.exit(1);
+				}
+				break;
+			case 'M':
+				// Take intrinsic lock on 'System' class
+				// to prevent thread interference in timing measurements.
+				synchronized(System.class){
+					startTime = System.nanoTime();
+					MergeSort<T> mergeObj = new MergeSort<T>(this.lst);
+					endTime = System.nanoTime();
+				}
+				execTime = (endTime - startTime) / (10e9);
+				
+				// Check that the sort was performed correctly
+				if (this.checkResult(this.lst)){
+					System.out.println("Time taken by Merge Sort: " + execTime + " secs");
+				} else {
+					System.err.println("The list did not sort correctly.");
 					System.exit(1);
 				}
 				break;
@@ -110,7 +137,6 @@ public class SortingClient<T extends Comparable<T>> implements Runnable{
 		execTime = (endTime - startTime) / (10e9);
 		
 		System.out.println("Time taken by Java's Sorting function: " + execTime + " secs");	
-		
 		// Create separate threads for each sort
 		if (sortsToRun.contains("I")){
 			SortingClient<T> insertionSortObj = new SortingClient<T>();
@@ -127,6 +153,15 @@ public class SortingClient<T extends Comparable<T>> implements Runnable{
 			selectionSortObj.sortToRun = 'S';
 			new Thread(selectionSortObj).start();
 		}
+
+		if (sortsToRun.contains("M")){
+			SortingClient<T> mergeSortObj = new SortingClient<T>();
+			mergeSortObj.lst = new ArrayList<T>(this.lst);
+			mergeSortObj.lstCopy = new ArrayList<T>(this.lstCopy);
+			mergeSortObj.sortToRun = 'M';
+			new Thread(mergeSortObj).start();
+		}
+		
     }
     
 	/*
