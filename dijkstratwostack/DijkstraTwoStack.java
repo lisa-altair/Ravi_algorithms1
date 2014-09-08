@@ -63,7 +63,12 @@ public class DijkstraTwoStack{
         for (int i = 0; i < exp_len; i++){
             char catchChar = expression.charAt(i);
             
-            // Ignore left paranthesis
+			if ((i == 0) && (catchChar != '(')){
+				System.err.println("Incorrect format: The expression must start with '('");
+				System.exit(1);
+			}
+            
+			// Ignore left paranthesis
             if (catchChar == '(')
                 continue;
             
@@ -117,7 +122,7 @@ public class DijkstraTwoStack{
             System.err.println("No console");
             System.exit(1);
         }
-        String expression = c.readLine("Enter an algebraic expression to evaluate: ");
+        String expression = c.readLine("Enter an algebraic expression to evaluate:\nFormat: ((<expression>) + (<expression>) + <variable>)\n");
         System.out.println("Result: " + evaluate(expression));
     }    
 }
