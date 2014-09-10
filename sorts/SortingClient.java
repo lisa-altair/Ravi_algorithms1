@@ -17,8 +17,10 @@ import java.lang.Thread;
  */
 public class SortingClient<T extends Comparable<T>> implements Runnable{
 	char sortToRun;
+	double javaExecTime;
+	static String objectType = null;
 	ArrayList<T> lst = null;
-	ArrayList<T> lstCopy = null;
+	ArrayList<T> sortedList = null;
 	static int limit = 10000; // Default number of objects to sort
 	
     /*
@@ -41,9 +43,9 @@ public class SortingClient<T extends Comparable<T>> implements Runnable{
     private boolean checkResult(ArrayList<T> lst){
 		for (int i = 0; i < lst.size(); i++){
 			T lstObj = lst.get(i);
-			T lstCopyObj = this.lstCopy.get(i);
+			T sortedLstObj = this.sortedList.get(i);
 			
-			if (lstObj.compareTo(lstCopyObj) != 0){
+			if (lstObj.compareTo(sortedLstObj) != 0){
 				return false;
 			}
 		}
@@ -71,7 +73,8 @@ public class SortingClient<T extends Comparable<T>> implements Runnable{
 
 				// Check that the sort was performed correctly
 				if (this.checkResult(this.lst)){
-					System.out.println("Time taken by Insertion Sort: " + execTime + " secs");
+					System.out.println("Insertion Sort execution time for " + 
+						objectType + " objects: " + execTime + " secs");
 				} else {
 					System.err.println("The list did not sort in natural order.");
 					System.exit(1);
@@ -90,7 +93,8 @@ public class SortingClient<T extends Comparable<T>> implements Runnable{
 
 				// Check that the sort was performed correctly
 				if (this.checkResult(this.lst)){
-					System.out.println("Time taken by Selection Sort: " + execTime + " secs");
+					System.out.println("Selection Sort execution time for " + 
+						objectType + " objects: " + execTime + " secs");
 				} else {
 					System.err.println("The list did not sort correctly.");
 					System.exit(1);
@@ -108,12 +112,33 @@ public class SortingClient<T extends Comparable<T>> implements Runnable{
 				
 				// Check that the sort was performed correctly
 				if (this.checkResult(this.lst)){
-					System.out.println("Time taken by Merge Sort: " + execTime + " secs");
+					System.out.println("Merge Sort execution time for " + 
+						objectType + " objects: " + execTime + " secs");
 				} else {
 					System.err.println("The list did not sort correctly.");
 					System.exit(1);
 				}
 				break;
+			case 'Q':
+				// Take intrinsic lock on 'System' class
+				// to prevent thread interference in timing measurements.
+				synchronized(System.class){
+					startTime = System.nanoTime();
+					QuickSort<T> mergeObj = new QuickSort<T>(this.lst);
+					endTime = System.nanoTime();
+				}
+				execTime = (endTime - startTime) / (10e9);
+				
+				// Check that the sort was performed correctly
+				if (this.checkResult(this.lst)){
+					System.out.println("Quick Sort execution time for " + 
+						objectType + " objects: " + execTime + " secs");
+				} else {
+					System.err.println("The list did not sort correctly.");
+					System.exit(1);
+				}
+				break;
+
 			default:
 					System.err.println("Invalid value of 'sortToRun'");
 					System.exit(1);
@@ -126,44 +151,89 @@ public class SortingClient<T extends Comparable<T>> implements Runnable{
 	 *
 	 * @param sortsToRun: A String used to determine which sorts to run.
 	 */
-	private void sortMain(String sortsToRun){
+	private static <T extends Comparable<T>> void sortMain(String sortsToRun, ArrayList<T> lst){
         long startTime, endTime;
 		double execTime;
-
+		
+		// Create a copy of 'lst'
+		ArrayList<T> lstCopy = new ArrayList<T>(lst);
+		
 		// Sort the list using Java's sorting implementation
 		startTime = System.nanoTime();
-		Collections.sort(this.lstCopy);
+		Collections.sort(lstCopy);
 		endTime = System.nanoTime();
 		execTime = (endTime - startTime) / (10e9);
 		
-		System.out.println("Time taken by Java's Sorting function: " + execTime + " secs");	
+		System.out.println("Java Sort execution time for " + objectType + 
+			" objects: " + execTime + " secs");
+			
 		// Create separate threads for each sort
+		Thread threadI = null, threadS = null, threadM = null, threadQ = null;
 		if (sortsToRun.contains("I")){
 			SortingClient<T> insertionSortObj = new SortingClient<T>();
-			insertionSortObj.lst = new ArrayList<T>(this.lst);
-			insertionSortObj.lstCopy = new ArrayList<T>(this.lstCopy);
+			insertionSortObj.lst = new ArrayList<T>(lst);
+			insertionSortObj.sortedList = new ArrayList<T>(lstCopy);
 			insertionSortObj.sortToRun = 'I';
-			new Thread(insertionSortObj).start();
+			threadI = new Thread(insertionSortObj);
+			threadI.start();
 		}
 		
 		if (sortsToRun.contains("S")){
 			SortingClient<T> selectionSortObj = new SortingClient<T>();
-			selectionSortObj.lst = new ArrayList<T>(this.lst);
-			selectionSortObj.lstCopy = new ArrayList<T>(this.lstCopy);
+			selectionSortObj.lst = new ArrayList<T>(lst);
+			selectionSortObj.sortedList = new ArrayList<T>(lstCopy);
 			selectionSortObj.sortToRun = 'S';
-			new Thread(selectionSortObj).start();
+			threadS = new Thread(selectionSortObj);
+			threadS.start();
 		}
 
 		if (sortsToRun.contains("M")){
 			SortingClient<T> mergeSortObj = new SortingClient<T>();
-			mergeSortObj.lst = new ArrayList<T>(this.lst);
-			mergeSortObj.lstCopy = new ArrayList<T>(this.lstCopy);
+			mergeSortObj.lst = new ArrayList<T>(lst);
+			mergeSortObj.sortedList = new ArrayList<T>(lstCopy);
 			mergeSortObj.sortToRun = 'M';
-			new Thread(mergeSortObj).start();
+			threadM = new Thread(mergeSortObj);
+			threadM.start();
+		}
+
+		if (sortsToRun.contains("Q")){
+			SortingClient<T> quickSortObj = new SortingClient<T>();
+			quickSortObj.lst = new ArrayList<T>(lst);
+			quickSortObj.sortedList = new ArrayList<T>(lstCopy);
+			quickSortObj.sortToRun = 'Q';
+			threadQ = new Thread(quickSortObj);
+			threadQ.start();
+		}
+		try {
+			threadI.join();
+			threadS.join();
+			threadM.join();
+			threadQ.join();
+		}catch (InterruptedException e){
+			return;
+		}
+	}
+
+	/*
+	 * This method generates a list of Integer objects
+	 * and calls the sortMain() method on it.
+	 *
+	 * @param sortsToRun: A String used to determine which sorts to run.
+	 */
+	public static void sortInteger(String sortsToRun){
+		objectType = "Integer";
+		ArrayList<Integer> lst = new ArrayList<Integer>();
+		Random r = new Random();
+
+		// Create a list of Integer objects with pseudo-random values
+		for (int i = 0; i < limit; i++){
+			Integer newObj = new Integer(r.nextInt(limit + 100));
+			lst.add(newObj);
 		}
 		
-    }
-    
+		sortMain(sortsToRun, lst);	
+	}
+
 	/*
 	 * This method generates a list of "DummyClass" objects
 	 * and calls the sortMain() method on it.
@@ -171,19 +241,16 @@ public class SortingClient<T extends Comparable<T>> implements Runnable{
 	 * @param sortsToRun: A String used to determine which sorts to run.
 	 */
 	public static void sortCustom(String sortsToRun){
-		SortingClient<DummyClass> sortDummy = new SortingClient<DummyClass>();
-		sortDummy.lst = new ArrayList<DummyClass>();
-		sortDummy.lstCopy = new ArrayList<DummyClass>();
+		objectType = "DummyClass";
+		ArrayList<DummyClass> lst = new ArrayList<DummyClass>();
 		Random r = new Random();
 		
 		// Create a list of "DummyClass" objects with pseudo-random values
 		for (int i = 0; i < limit; i++){
 			DummyClass newObj = new DummyClass(r.nextInt(), r.nextFloat());
-			sortDummy.lst.add(newObj);
-			sortDummy.lstCopy.add(newObj);
+			lst.add(newObj);
 		}
-		
-		sortDummy.sortMain(sortsToRun);	
+		sortMain(sortsToRun, lst);
 	}
  
 	public static void main(String args[]){
@@ -208,6 +275,9 @@ public class SortingClient<T extends Comparable<T>> implements Runnable{
 		}
 		
 		sortsToRun.toUpperCase();
+		
+		// Sort an 'Integer' class' objects
+		sortInteger(sortsToRun);
 		
 		// Sort a custom class' objects
 		sortCustom(sortsToRun);

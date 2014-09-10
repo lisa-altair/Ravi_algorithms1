@@ -3,11 +3,12 @@ CLIENT_SOURCE = SortingClient.java
 SELECTION_SOURCE = selectionsort/SelectionSort.java
 INSERTION_SOURCE = insertionsort/InsertionSort.java
 MERGE_SOURCE = mergesort/MergeSort.java
+QUICK_SOURCE = quicksort/QuickSort.java
 EXE = SortingClient
-SORTS = SIM
-N = 100000
+SORTS = SIMQ
+N = 10
 
-SOURCES = $(DUMMY_SOURCE) $(CLIENT_SOURCE) $(SELECTION_SOURCE) $(INSERTION_SOURCE) $(MERGE_SOURCE)
+SOURCES = $(DUMMY_SOURCE) $(CLIENT_SOURCE) $(SELECTION_SOURCE) $(INSERTION_SOURCE) $(MERGE_SOURCE) $(QUICK_SOURCE)
 
 $(EXE): $(SOURCES)
 	javac -Xlint -d . $(SOURCES)
@@ -20,6 +21,9 @@ selection_sort: $(EXE)
 
 merge_sort: $(EXE)
 	java $(EXE) $(N) "M"
+
+quick_sort: $(EXE)
+	java $(EXE) $(N) "Q"
 
 run_all: $(EXE)
 	java $(EXE) $(N) $(SORTS)
