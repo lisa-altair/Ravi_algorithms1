@@ -3,6 +3,10 @@ import java.util.Random;
 import java.util.Collections;
 import java.util.Scanner;
 import java.lang.Thread;
+import java.io.FileReader;
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 
 /*
  * Client code for testing the performance of various sorts.
@@ -12,13 +16,14 @@ import java.lang.Thread;
  * product of DummyInt & DummyFloat.
  * 
  * @author: Ravi Agrawal
- * @date: Aug 2014
+ * @last modified: Sep 2014
  * 
  */
 public class SortingClient<T extends Comparable<T>> implements Runnable{
 	char sortToRun;
+	// Enable this to generate list with duplicate values
+	static boolean duplicates = true;
 	double javaExecTime;
-	static String objectType = null;
 	ArrayList<T> lst = null;
 	ArrayList<T> sortedList = null;
 	static int limit = 10000; // Default number of objects to sort
@@ -73,8 +78,7 @@ public class SortingClient<T extends Comparable<T>> implements Runnable{
 
 				// Check that the sort was performed correctly
 				if (this.checkResult(this.lst)){
-					System.out.println("Insertion Sort execution time for " + 
-						objectType + " objects: " + execTime + " secs");
+					System.out.println("Insertion Sort execution time: "+ execTime + " secs");
 				} else {
 					System.err.println("The list did not sort in natural order.");
 					System.exit(1);
@@ -93,8 +97,7 @@ public class SortingClient<T extends Comparable<T>> implements Runnable{
 
 				// Check that the sort was performed correctly
 				if (this.checkResult(this.lst)){
-					System.out.println("Selection Sort execution time for " + 
-						objectType + " objects: " + execTime + " secs");
+					System.out.println("Selection Sort execution time: "+ execTime + " secs");
 				} else {
 					System.err.println("The list did not sort correctly.");
 					System.exit(1);
@@ -112,8 +115,7 @@ public class SortingClient<T extends Comparable<T>> implements Runnable{
 				
 				// Check that the sort was performed correctly
 				if (this.checkResult(this.lst)){
-					System.out.println("Merge Sort execution time for " + 
-						objectType + " objects: " + execTime + " secs");
+					System.out.println("Merge Sort execution time: "+ execTime + " secs");
 				} else {
 					System.err.println("The list did not sort correctly.");
 					System.exit(1);
@@ -123,19 +125,21 @@ public class SortingClient<T extends Comparable<T>> implements Runnable{
 				// Take intrinsic lock on 'System' class
 				// to prevent thread interference in timing measurements.
 				synchronized(System.class){
+					QuickSort<T> quickObj = new QuickSort<T>(this.lst);
+					int low = 0, high = (this.lst.size() - 1);
 					startTime = System.nanoTime();
-					QuickSort<T> mergeObj = new QuickSort<T>(this.lst);
+					this.lst = quickObj.sort(low, high);
 					endTime = System.nanoTime();
 				}
 				execTime = (endTime - startTime) / (10e9);
-				
-				// Check that the sort was performed correctly
-				if (this.checkResult(this.lst)){
-					System.out.println("Quick Sort execution time for " + 
-						objectType + " objects: " + execTime + " secs");
-				} else {
-					System.err.println("The list did not sort correctly.");
-					System.exit(1);
+				if (this.lst != null) {
+					// Check that the sort was performed correctly
+					if (this.checkResult(this.lst)){
+						System.out.println("Quick Sort execution time: "+ execTime + " secs");
+					} else {
+						System.err.println("The list did not sort correctly.");
+						System.exit(1);
+					}
 				}
 				break;
 
@@ -164,8 +168,7 @@ public class SortingClient<T extends Comparable<T>> implements Runnable{
 		endTime = System.nanoTime();
 		execTime = (endTime - startTime) / (10e9);
 		
-		System.out.println("Java Sort execution time for " + objectType + 
-			" objects: " + execTime + " secs");
+		System.out.println("Java Sort execution time: "+ execTime + " secs");
 			
 		// Create separate threads for each sort
 		Thread threadI = null, threadS = null, threadM = null, threadQ = null;
@@ -205,10 +208,14 @@ public class SortingClient<T extends Comparable<T>> implements Runnable{
 			threadQ.start();
 		}
 		try {
-			threadI.join();
-			threadS.join();
-			threadM.join();
-			threadQ.join();
+			if (threadI != null)
+				threadI.join();
+			if (threadS != null)
+				threadS.join();
+			if (threadM != null)
+				threadM.join();
+			if (threadQ != null)
+				threadQ.join();
 		}catch (InterruptedException e){
 			return;
 		}
@@ -221,16 +228,22 @@ public class SortingClient<T extends Comparable<T>> implements Runnable{
 	 * @param sortsToRun: A String used to determine which sorts to run.
 	 */
 	public static void sortInteger(String sortsToRun){
-		objectType = "Integer";
 		ArrayList<Integer> lst = new ArrayList<Integer>();
 		Random r = new Random();
 
 		// Create a list of Integer objects with pseudo-random values
-		for (int i = 0; i < limit; i++){
-			Integer newObj = new Integer(r.nextInt(limit + 100));
-			lst.add(newObj);
+		if (duplicates){
+			for (int i = 0; i < limit; i++){
+				Integer newObj = new Integer(r.nextInt(100));
+				lst.add(newObj);
+			}
+		} else {
+			for (int i = 0; i < limit; i++){
+				Integer newObj = new Integer(r.nextInt(limit + 100));
+				lst.add(newObj);
+			}
 		}
-		
+		System.out.println("\nSorting a list of Integer objects:");
 		sortMain(sortsToRun, lst);	
 	}
 
@@ -241,15 +254,22 @@ public class SortingClient<T extends Comparable<T>> implements Runnable{
 	 * @param sortsToRun: A String used to determine which sorts to run.
 	 */
 	public static void sortCustom(String sortsToRun){
-		objectType = "DummyClass";
 		ArrayList<DummyClass> lst = new ArrayList<DummyClass>();
 		Random r = new Random();
 		
 		// Create a list of "DummyClass" objects with pseudo-random values
-		for (int i = 0; i < limit; i++){
-			DummyClass newObj = new DummyClass(r.nextInt(), r.nextFloat());
-			lst.add(newObj);
+		if (duplicates){
+			for (int i = 0; i < limit; i++){
+				DummyClass newObj = new DummyClass(r.nextInt(100), (float)r.nextInt(100));
+				lst.add(newObj);
+			}
+		} else {
+			for (int i = 0; i < limit; i++){
+				DummyClass newObj = new DummyClass(r.nextInt(), r.nextFloat());
+				lst.add(newObj);
+			}
 		}
+		System.out.println("\nSorting a list of custom class \"DummyClass\" objects:");
 		sortMain(sortsToRun, lst);
 	}
  
@@ -275,6 +295,31 @@ public class SortingClient<T extends Comparable<T>> implements Runnable{
 		}
 		
 		sortsToRun.toUpperCase();
+		
+		// Parse 'sorts.configure'
+		BufferedReader reader = null;
+		try {
+			reader = new BufferedReader(new FileReader("sort.configure"));
+			String line = null;
+
+			while ((line = reader.readLine()) != null){
+				String[] content = line.replaceAll("\\s+", "").split("=");
+				// Check if duplicates are allowed
+				if (content[0].equals("DUPLICATES_ALLOWED")){
+					duplicates = Boolean.parseBoolean(content[1]);
+					break;
+				}
+			}
+
+			// Close the input stream
+			if (reader != null)
+				reader.close();
+		} catch (FileNotFoundException e){
+			System.err.println("File sort.configure not found");
+			System.exit(1);
+		} catch(IOException e){
+			System.err.println(e);
+		}
 		
 		// Sort an 'Integer' class' objects
 		sortInteger(sortsToRun);

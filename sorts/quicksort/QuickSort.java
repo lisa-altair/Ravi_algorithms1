@@ -1,137 +1,95 @@
 import java.util.ArrayList;
+import java.io.FileReader;
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+
 /*
- * Performs Quick Sort for any generic list of objects,
- * provided the object's class implements Comparable.
- * 
+ * Performs Quick Sort for any generic list of objects.
+ * Calls various Quick Sort implementations based on
+ * parameters in the "sort.configure" file.
+ *
  * @author: Ravi Agrawal
  * @date: Sep 2014
  */
 class QuickSort<T extends Comparable<T>>{
+	static String whichQuickSort = null;
+	QuickSortParent<T> quickObj = null;
+	
     /*
      * Constructor for QuickSort.
+	 * Parses the file "sort.configure" to figure out the
+	 * particular Quick sort implementation to run &
+	 * initializes it.
      *
      * @param lst: A generic type ArrayList to be sorted.
      */
-    public QuickSort(ArrayList<T> lst){
-		if (lst.size() < 2){
-            System.out.println("Nothing to sort");
-            System.exit(0);
-		}
-		
-		sort(lst, 0, (lst.size() - 1));
-	}
-	
-	/*
-	 * This method calculates median of three objects.
-	 *
-	 * @param lst: A generic type ArrayList.
-	 * @param low: first index of the object list.
-	 * @param mid: middle index of the object list.
-	 * @param high: last index of the object list.
-	 * @return: index of the median object.
-	 */
-	int medianOfThree(ArrayList<T> lst, int low, int mid, int high){
-		T left = lst.get(low), center = lst.get(mid), right = lst.get(high);
-		if (left.compareTo(center) > 0){
-			if (left.compareTo(right) < 0)
-				return low;
-			else if (center.compareTo(right) > 0)
-				return mid;
-			else
-				return high;
-		} else if (left.compareTo(right) > 0){
-			return low;
-		} else if (center.compareTo(right) < 0){
-			return mid;
-		} else
-			return high;
-	}
-	
-	/*
-	 * This finds the pivot element's index
-	 *
-	 * @param lst: A generic type ArrayList.
-	 * @param low: first index of the object list.
-	 * @param mid: middle index of the object list.
-	 * @param high: last index of the object list.
-	 * @return: index of the pivot element.
-	 */
-	int findPivot(ArrayList<T> lst, int low, int mid, int high){
-		// For small lists, use the median of arguments as pivot
-		if ((high - low) < 40){
-			int median = medianOfThree(lst, low, mid, high);
-			return median;
-		}
-		
-		// For larger arrays, find pivot by Tukey's ninther,
-		// also known as "median of medians"
-		int offset = (high - low) / 8;
-		int firstMedian = medianOfThree(lst, low, low + offset, low + (2 * offset));
-		int secondMedian = medianOfThree(lst, mid - offset, mid, mid + offset);
-		int thirdMedian = medianOfThree(lst, mid + (2 * offset), high - offset, high);
-		int ninther = medianOfThree(lst, firstMedian, secondMedian, thirdMedian);
-		return ninther;
-	}
-	
-	/*
-	 * This method performs the 'partition' operation of quick sort.
-	 *
-	 * @param lst: A generic type ArrayList to be sorted.
-	 * @param low: first index of the object list.
-	 * @param high: last index of the object list.
-	 * @return: index of the pivot element.
-	 */
-	int partition(ArrayList<T> lst, int low, int high){
-		int i = low, j = high + 1, mid = (high - low) / 2;
-		
-		// Find the pivot object's index
-		int pivotIndex = findPivot(lst, low, mid, high);
-		
-		// Swap element at 'low' with pivot
-		T pivot = lst.get(pivotIndex);
-		lst.set(pivotIndex, lst.get(low));
-		lst.set(low, pivot);
-		
-		// Partition the list by pivot
-		while (true){
-			// Move the 'i'th pointer until an element greater than pivot
-			while ((lst.get(++i).compareTo(pivot) <= 0) && (j >= i));
-			
-			// Move the 'j'th pointer until an element less than pivot
-			while ((lst.get(--j).compareTo(pivot) >= 0) && (j >= i));
-			
-			// Pointers crossed over, break out of loop.
-			if (j < i)
-				break;
-			
-			// Swap 'i'th and 'j'th elements
-			T jCopy = lst.get(j);
-			lst.set(j, lst.get(i));
-			lst.set(i, jCopy);
-		}
-		
-		//Swap pivot (@ 'low') with 'j', it's correct position
-		lst.set(low, lst.get(j));
-		lst.set(j, pivot);
+	public QuickSort(ArrayList<T> lst){
+		// Read "sort.configure" file to figure out which
+		// Quick sort implementation to run
+		BufferedReader reader = null;
+		try {
+			reader = new BufferedReader(new FileReader("sort.configure"));
+			String line = null;
 
-		return j;
+			while ((line = reader.readLine()) != null){
+				String[] content = line.replaceAll("\\s+", "").split("=");
+				if (content[0].equals("QUICKSORT_TO_RUN")){
+					whichQuickSort = content[1];
+					break;
+				}
+			}
+
+			// Close the input stream
+			if (reader != null)
+				reader.close();
+		} catch (FileNotFoundException e){
+			System.err.println("File sort.configure not found");
+			System.exit(1);
+		} catch(IOException e){
+			System.err.println(e);
+		}
+
+		// Compare the various Quick sort implementations
+		if (whichQuickSort.equals("all")){
+			double startTime = 0.0, endTime = 0.0, execTime1 = 0.0, execTime2 = 0.0;
+			int low = 0, high = (lst.size() - 1);
+			
+			// Test the performance of "QuickSort1Way"
+			ArrayList<T> lstCopy = new ArrayList<T>(lst);
+			QuickSort1Way<T> quick1 = new QuickSort1Way<T>(lstCopy);
+			startTime = System.nanoTime();
+			lstCopy = quick1.sort(low, high);
+			endTime = System.nanoTime();
+			execTime1 = (endTime - startTime) / (10e9);
+			
+			// Test the performance of "QuickSort3Way"
+			lstCopy = new ArrayList<T>(lst);
+			low = 0;
+			high = (lst.size() - 1);
+			QuickSort3Way<T> quick3 = new QuickSort3Way<T>(lstCopy);
+			startTime = System.nanoTime();
+			lstCopy = quick3.sort(low, high);
+			endTime = System.nanoTime();
+			execTime2 = (endTime - startTime) / (10e9);
+
+			System.out.println("Time taken by 'QuickSort1Way': " + execTime1 + 
+				"\nTime taken by 'QuickSort3Way': " + execTime2);
+		}
+		
+		// Instantiate "QuickSort1Way.java" implementation
+		if (whichQuickSort.equals("QuickSort1Way.java"))
+			this.quickObj = new QuickSort1Way<T>(lst);
+
+		// Instantiate "QuickSort3Way.java" implementation
+		if (whichQuickSort.equals("QuickSort3Way.java"))
+			this.quickObj = new QuickSort3Way<T>(lst);
 	}
-	
-    /*
-     * This method recursively partitions the object list via pivot,
-	 * which is put in it's correct position by the partition method.
-     * 
-     * @param lst: A generic type ArrayList to be sorted.
-	 * @param low: first index of the list.
-	 * @param high: last index of the list.
-     */
-    public void sort(ArrayList<T> lst, int low, int high){
-		int divider = partition(lst, low, high);
-		if (low < (divider - 1)){
-			sort(lst, low, divider - 1);
-		}
-		if (divider < (high - 1)){
-			sort(lst, divider + 1, high);
-		}
-    }
+	public ArrayList<T> sort(int low, int high){
+		if (this.quickObj != null)
+			return this.quickObj.sort(low, high);
+		
+		// Return null if 'whichQuickSort' was 'all'
+		return null;
+	}
 }

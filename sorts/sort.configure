@@ -1,0 +1,5 @@
+#valid values for 'QUICKSORT_TO_RUN' = QuickSort1Way.java, QuickSort3Way.java, all
+#valid values for 'DUPLICATES_ALLOWED' = true, false
+
+QUICKSORT_TO_RUN = QuickSort3Way.java
+DUPLICATES_ALLOWED = true
