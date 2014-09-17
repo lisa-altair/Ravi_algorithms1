@@ -3,13 +3,17 @@
  * @date September 2014
  */
 
--- The client program runs various sorting implementations on a list of custom objects created from a class called "DummyClass".
--- Performance statistics are displayed, in comparison to Java's inbuilt sorting implementation.
 
 -- Execute the projects as follows:
 -> For running only insertion sort: make insertion_sort
 -> For running only selection sort: make selection_sort
+-> For running only merge sort: make merge_sort
+-> For running only quick sort: make quick_sort
 -> For running all sorts: make run_all
 
--- The project currently generates a list of 10,000 objects of class 'DummyClass' with pseudo-random values. Change the value of 'N' inside Makefile to vary this number.
+-- The project currently sorts a list of 100,000 objects of class 'DummyClass' & Integer with pseudo-random values. Change the value of 'N' inside Makefile to vary this number.
 -- The sorting implementations are generic and can be tested for any object type that implements 'Comparable' interface.
+-- Change the parameters inside "sort.configure" file for various runtime customizations:
+  -- "QUICKSORT_TO_RUN": Choose which quick sort implementation to run. use 'all' for comparing all the implementations.
+  -- "DUPLICATES_ALLOWED": Choose whether to allow duplicate values in the list to sorted.
+-- Performance statistics are displayed, in comparison to Java's inbuilt sorting implementation.
